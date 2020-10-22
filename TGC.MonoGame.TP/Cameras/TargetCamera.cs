@@ -162,9 +162,9 @@ namespace TGC.MonoGame.Samples.Cameras
             TargetPosition = objectPosition;
             var cameraPosition = Position;
 
-            cameraPosition.X = (objectPosition.X + zoom ) * (float)Math.Cos(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
-            cameraPosition.Y = (objectPosition.Y + 200 + zoom)  * (float)Math.Sin(ConvertToRadians(currentYangle));
-            cameraPosition.Z = (objectPosition.Z + zoom ) * (float)Math.Sin(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
+            cameraPosition.X = objectPosition.X + zoom * (float)Math.Cos(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
+            cameraPosition.Y = objectPosition.Y + 200 + zoom * (float)Math.Sin(ConvertToRadians(currentYangle));
+            cameraPosition.Z = objectPosition.Z + zoom * (float)Math.Sin(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
             Position = cameraPosition;
             BuildView();
         }
