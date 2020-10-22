@@ -22,7 +22,7 @@ namespace TGC.MonoGame.Samples.Cameras
         public float minZoom = 240;
         public Vector3 OrientationVector { get; set; }
         private float zoom = 400f;
-        private float minimumYAngle = 15f;
+        private float minimumYAngle = 0f;
         private float maximumYAngle = 70f;
         private float currentYangle = 15f;
         private float cameraRotation = 0f;
@@ -162,9 +162,9 @@ namespace TGC.MonoGame.Samples.Cameras
             TargetPosition = objectPosition;
             var cameraPosition = Position;
 
-            cameraPosition.X = objectPosition.X + zoom * (float)Math.Cos(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
-            cameraPosition.Y = objectPosition.Y + zoom * (float)Math.Sin(ConvertToRadians(currentYangle));
-            cameraPosition.Z = objectPosition.Z + zoom * (float)Math.Sin(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
+            cameraPosition.X = (objectPosition.X + zoom ) * (float)Math.Cos(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
+            cameraPosition.Y = (objectPosition.Y + 200 + zoom)  * (float)Math.Sin(ConvertToRadians(currentYangle));
+            cameraPosition.Z = (objectPosition.Z + zoom ) * (float)Math.Sin(ConvertToRadians(cameraRotation)) * (float)Math.Sin(ConvertToRadians(90-currentYangle));
             Position = cameraPosition;
             BuildView();
         }
