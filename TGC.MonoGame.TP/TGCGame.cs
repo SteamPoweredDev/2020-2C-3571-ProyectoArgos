@@ -155,7 +155,7 @@ namespace TGC.MonoGame.TP
             time += Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) * timeMultiplier;
             // Aca deberiamos poner toda la logica de actualizacion del juego.
             PlayerShip.Update(time, timeMultiplier);
-
+            TargetCamera.Update(gameTime);
             WaterMatrix = PlayerShip.UpdateShipRegardingWaves(time);
             
             // Capturar Input teclado
