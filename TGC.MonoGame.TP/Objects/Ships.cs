@@ -8,41 +8,46 @@ namespace TGC.MonoGame.TP.Objects
     public class Ship 
     {
         public Vector3 Position { get; set; }
-        public float velocidad { get; set; }
+        public float speed { get; set; }
         private float maxspeed { get; set; }
         private float maxacceleration { get; set; }
         public Model modelo { get; set; }
         public Vector3 orientacion { get; set; }
         public float anguloDeGiro { get; set; }
         public float giroBase { get; set; }
-
+        private Boolean pressedAccelerator { get; set; }
+        private int currentGear { get; set; }
+        private Boolean HandBrake { get; set; }
+        private Boolean pressedReverse { get; set; }
         public Ship (Vector3 initialPosition, Model baseModel, Vector3 currentOrientation, float MaxSpeed) 
         {
-            velocidad = 0;
+            speed = 0;
             Position = initialPosition;
             modelo = baseModel;
             orientacion = currentOrientation;
             maxspeed = MaxSpeed;
             maxacceleration = 0.005f;
             anguloDeGiro = 0f;
-            giroBase = 0.005f;
+            giroBase = 0.003f;
+            pressedAccelerator = false;
+            currentGear = 0;
+            HandBrake = false;
+            pressedReverse = false;
         }
 
 
         public void Update(float gameTime, float timeMultiplier) {
-           // Console.Write(anguloDeGiro + "     ");
+
             ProcessKeyboard(gameTime);
-           // Console.Write(anguloDeGiro + "     Orientacion:  ");
-            
-           // Console.Write(orientacion + "       ");
+            UpdateMovementSpeed(gameTime);
             Move(gameTime, timeMultiplier);
-           // Console.Write(orientacion + "\n");
+
         }
         public void Move(float gameTime, float timeMultiplier)
         {
             var newOrientacion = new Vector3((float)Math.Sin(anguloDeGiro), 0, (float)Math.Cos(anguloDeGiro));
             orientacion = newOrientacion;
-            var newPosition = new Vector3(Position.X - velocidad*orientacion.X,Position.Y,Position.Z + velocidad*orientacion.Z );
+            var newPosition = new Vector3(Position.X - speed*orientacion.X,Position.Y,Position.Z + speed*orientacion.Z );
             Position = newPosition;
         }
 
@@ -73,15 +78,37 @@ namespace TGC.MonoGame.TP.Objects
             return Matrix.CreateLookAt(Vector3.Zero,orientacion, waterNormal);
         }
         
-        
+        private void UpdateMovementSpeed(float gameTime) 
+        {
+            float acceleration;
+            if(HandBrake) acceleration = maxacceleration;
+            else acceleration = maxacceleration * 8;
+            float GearMaxSpeed = (maxspeed*currentGear/3);
+            if(speed > GearMaxSpeed) {
+                if(speed - acceleration < GearMaxSpeed){
+                    speed = GearMaxSpeed;
+                }
+                else {
+                    speed -= acceleration;
+                }
+            }
+            else if(speed < GearMaxSpeed) {
+                if(speed + acceleration > GearMaxSpeed){
+                    speed = GearMaxSpeed;
+                }
+                else {
+                    speed += acceleration;
+                }
+            }
+        }
         private void ProcessKeyboard(float elapsedTime)
         {
             var keyboardState = Keyboard.GetState();
-
+            
 
             if (keyboardState.IsKeyDown(Keys.A))
             {
-                if(velocidad == 0){}
+                if(speed == 0){}
                 else {
                     if(anguloDeGiro+giroBase >= MathF.PI*2){
                         anguloDeGiro = anguloDeGiro + giroBase - MathF.PI*2;
@@ -94,7 +121,7 @@ namespace TGC.MonoGame.TP.Objects
 
             if (keyboardState.IsKeyDown(Keys.D))
             {
-                if(velocidad == 0){}
+                if(speed == 0){}
                 else {
                     if(anguloDeGiro+giroBase < 0){
                         anguloDeGiro = anguloDeGiro - giroBase + MathF.PI*2;
@@ -105,49 +132,32 @@ namespace TGC.MonoGame.TP.Objects
                 }
             }
 
-            if (keyboardState.IsKeyDown(Keys.W))
+            if (this.pressedAccelerator == false && keyboardState.IsKeyDown(Keys.W) && currentGear < 3)
             {
-                if(velocidad == maxspeed){}
-                else if(velocidad+maxacceleration >= maxspeed){
-                    velocidad = maxspeed;
-                }
-                else {
-                    velocidad += maxacceleration;
-                }
+                currentGear++;
+                pressedAccelerator = true;
+                if(HandBrake) HandBrake = false;
+            }
+            if(this.pressedAccelerator == true && keyboardState.IsKeyUp(Keys.W))
+            {
+                pressedAccelerator = false;
             }
 
-            if (keyboardState.IsKeyDown(Keys.S))
+            if (this.pressedReverse == false && keyboardState.IsKeyDown(Keys.S) && currentGear > -2)
             {
-                if(velocidad == -maxspeed){}
-                else if((velocidad-maxacceleration) <= -maxspeed){
-                    velocidad = -maxspeed;
-                }
-                else {
-                    velocidad -= maxacceleration;
-                }
+                currentGear--;
+                pressedReverse = true;
+                if(HandBrake) HandBrake = false;
+            }
+            if(this.pressedReverse == true && keyboardState.IsKeyUp(Keys.S))
+            {
+                pressedReverse = false;
             }
 
-            if(keyboardState.IsKeyDown(Keys.Space))
+            if(HandBrake == false && keyboardState.IsKeyDown(Keys.Space))
             {
-                if(velocidad > 0){
-                    if(velocidad - maxacceleration*6 <= 0){
-                        velocidad = 0;
-                    }
-                    else {
-                        velocidad -= maxacceleration*6;
-                    }
-                }
-                else if (velocidad < 0){
-                    if(velocidad + maxacceleration*6 >= 0){
-                        velocidad = 0;
-                    }
-                    else {
-                        velocidad += maxacceleration*6;
-                    }
-                }
-                else {
-                    velocidad = 0;
-                }
+                HandBrake = true;
+                currentGear = 0;
             }
         }
     }

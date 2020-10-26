@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -117,7 +117,7 @@ namespace TGC.MonoGame.TP
             modelEffect.DiffuseColor = Color.DarkBlue.ToVector3();
             modelEffect.EnableDefaultLighting();
 
-            PlayerShip = new Ship(boatPosition,Model,new Vector3(0,0,-1), 20);
+            PlayerShip = new Ship(boatPosition,Model,new Vector3(0,0,-1), 5);
 
             WaterEffect = Content.Load<Effect>(ContentFolderEffect + "WaterShader");
             
