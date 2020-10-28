@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Intrinsics.X86;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,13 +14,38 @@ namespace TGC.MonoGame.TP.Objects
         private float maxacceleration { get; set; }
         public Model modelo { get; set; }
         public Vector3 orientacion { get; set; }
+        public Vector3 orientacionSobreOla { get; set; }
         public float anguloDeGiro { get; set; }
         public float giroBase { get; set; }
+
         private Boolean pressedAccelerator { get; set; }
         private int currentGear { get; set; }
         private Boolean HandBrake { get; set; }
         private Boolean pressedReverse { get; set; }
-        public Ship (Vector3 initialPosition, Model baseModel, Vector3 currentOrientation, float MaxSpeed) 
+
+        private int _maxLife = 100;
+
+        private int _currentLife = 100;
+
+        private float _shootingCooldownTime = 0.8f;
+
+        private float _timeToCooldown = 0f;
+
+        public bool CanBeControlled = false;
+
+        public int CurrentLife
+        {
+            get { return _currentLife; }
+        }
+        
+        public int MaxLife
+        {
+            get { return _maxLife; }
+        }
+
+        private TGCGame _game;
+
+        public Ship (Vector3 initialPosition, Model baseModel, Vector3 currentOrientation, float MaxSpeed, TGCGame game)
         {
             speed = 0;
             Position = initialPosition;
@@ -36,18 +62,32 @@ namespace TGC.MonoGame.TP.Objects
         }
 
 
-        public void Update(float gameTime, float timeMultiplier) {
-
-            ProcessKeyboard(gameTime);
-            UpdateMovementSpeed(gameTime);
-            Move(gameTime, timeMultiplier);
-
+        public void Update(float elsapseGameTime, float timeMultiplier, GameTime gameTime) 
+        {
+            if (CanBeControlled)
+            {
+                ProcessKeyboard(elsapseGameTime);
+                Move(elsapseGameTime, timeMultiplier);
+                if (_timeToCooldown >= float.Epsilon)
+                {
+                    _timeToCooldown -= Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);   
+                }   
+            }
         }
+      
         public void Move(float gameTime, float timeMultiplier)
         {
             var newOrientacion = new Vector3((float)Math.Sin(anguloDeGiro), 0, (float)Math.Cos(anguloDeGiro));
             orientacion = newOrientacion;
+
             var newPosition = new Vector3(Position.X - speed*orientacion.X,Position.Y,Position.Z + speed*orientacion.Z );
+/*
+            var extraSpeed = 10;
+            if (velocidad == 0) extraSpeed = 0; //Asi no se lo lleva el agua cuando esta parado
+            var speed = velocidad + extraSpeed*-Vector3.Dot(orientacionSobreOla, Vector3.Up);
+*/
+            var newPosition = new Vector3(Position.X - speed*orientacion.X ,Position.Y,Position.Z + speed*orientacion.Z);
+
             Position = newPosition;
         }
 
@@ -55,8 +95,7 @@ namespace TGC.MonoGame.TP.Objects
             
             float waveFrequency = 0.01f;
             float waveAmplitude = 20;
-           // float waveAmplitude2 = 50;
-           time *= 2;
+            time *= 2;
            
             var worldVector = Position;
             
@@ -74,8 +113,11 @@ namespace TGC.MonoGame.TP.Objects
             Position = worldVector;
             
             var waterNormal = Vector3.Normalize(Vector3.Cross(tangent2, tangent1));
+            
+            //Proyectamos la orientacion sobre el plano formado con la normal del agua para subir o bajar la proa del barco
+            orientacionSobreOla = orientacion -  Vector3.Dot(orientacion, waterNormal) * waterNormal;
 
-            return Matrix.CreateLookAt(Vector3.Zero,orientacion, waterNormal);
+            return Matrix.CreateLookAt(Vector3.Zero,orientacionSobreOla, waterNormal);
         }
         
         private void UpdateMovementSpeed(float gameTime) 
@@ -159,6 +201,15 @@ namespace TGC.MonoGame.TP.Objects
                 HandBrake = true;
                 currentGear = 0;
             }
+
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed && _timeToCooldown < float.Epsilon)
+            {
+                var bulletOrientation = orientacion;
+                bulletOrientation.X = -bulletOrientation.X;
+                _game.Bullets.Add(new Bullet(_game, Position, bulletOrientation + Vector3.Up * 0.2f));
+                _timeToCooldown = _shootingCooldownTime;
+            }
+
         }
     }
 }
