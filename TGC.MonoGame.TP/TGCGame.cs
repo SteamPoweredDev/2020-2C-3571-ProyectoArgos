@@ -99,11 +99,12 @@ namespace TGC.MonoGame.TP
            // Projection =
                 Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1000);
 
-            var screenSize = new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
-            Camera = new FreeCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(-350, 50, 400), screenSize);
+            var screenCenter = new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+            Camera = new FreeCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(-350, 50, 400), screenCenter);
             boatPosition = new Vector3(-150, 40, -600);
-            TargetCamera = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(boatPosition.X, boatPosition.Y + 150, boatPosition.Z - 250), boatPosition);
-            WaterMatrixForPlayer = Matrix.Identity;
+
+            TargetCamera = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(boatPosition.X, boatPosition.Y + 150, boatPosition.Z - 250), boatPosition, screenCenter, (float)(GraphicsDevice.Viewport.Height), (float)(GraphicsDevice.Viewport.Width));
+            WaterMatrix = Matrix.Identity;
 
             /*
             Matrix world = Matrix.Identity;
@@ -137,9 +138,10 @@ namespace TGC.MonoGame.TP
             modelEffect.DiffuseColor = Color.DarkBlue.ToVector3();
             modelEffect.EnableDefaultLighting();
 
-            PlayerShip = new Ship(boatPosition,PlayerBoat,new Vector3(0,0,-1), 20, this);
+
+            PlayerShip = new Ship(boatPosition,PlayerBoat,new Vector3(0,0,-1), 5, this);
             PlayerShip.CanBeControlled = true;
-            EnemyShip = new Ship(new Vector3(-600, 20, 100), EnemyBoat, Vector3.Forward, 20, this);
+            EnemyShip = new Ship(new Vector3(-600, 20, 100), EnemyBoat, Vector3.Forward, 5, this);
 
             WaterEffect = Content.Load<Effect>(ContentFolderEffect + "WaterShader");
             
