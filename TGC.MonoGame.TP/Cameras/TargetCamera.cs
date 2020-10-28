@@ -26,6 +26,9 @@ namespace TGC.MonoGame.Samples.Cameras
         private float maximumYAngle = 70f;
         private float currentYangle = 15f;
         private float cameraRotation = 0f;
+        private Point screenCenter;
+        private float windowHeight;
+        private float windowWidth;
 
         /// <summary>
         ///     Camera looking at a particular direction, which has the up vector (0,1,0).
@@ -33,9 +36,12 @@ namespace TGC.MonoGame.Samples.Cameras
         /// <param name="aspectRatio">Aspect ratio, defined as view space width divided by height.</param>
         /// <param name="position">The position of the camera.</param>
         /// <param name="targetPosition">The target towards which the camera is pointing.</param>
-        public TargetCamera(float aspectRatio, Vector3 position, Vector3 targetPosition) : base(aspectRatio)
+        public TargetCamera(float aspectRatio, Vector3 position, Vector3 targetPosition, Point ScreenCenter, float WindowHeight, float WindowWidth) : base(aspectRatio)
         {
+            this.screenCenter = ScreenCenter;
             BuildView(position, targetPosition);
+            this.windowHeight = WindowHeight;
+            this.windowWidth = WindowWidth;
         }
 
         /// <summary>
@@ -92,18 +98,106 @@ namespace TGC.MonoGame.Samples.Cameras
         private void ProcessMouseMovement(float elapsedTime)
         {
             var mouseState = Mouse.GetState();
-            if(lastScrollValue == mouseState.ScrollWheelValue) return;
-            if (lastScrollValue < mouseState.ScrollWheelValue)
-            {
-                zoom = MathF.Min(MathF.Max(minZoom,zoom - scrollSensitivity), maxZoom);
-            }
-            else
-            {
-                zoom = MathF.Min(MathF.Max(minZoom,zoom + scrollSensitivity), maxZoom);
+            if (lastScrollValue != mouseState.ScrollWheelValue){
+                if (lastScrollValue < mouseState.ScrollWheelValue)
+                {
+                    zoom = MathF.Min(MathF.Max(minZoom,zoom - scrollSensitivity), maxZoom);
+                } 
+                else
+                {
+                    zoom = MathF.Min(MathF.Max(minZoom,zoom + scrollSensitivity), maxZoom);
+                }
             }
             lastScrollValue = mouseState.ScrollWheelValue;
-            Console.Write(mouseState.ScrollWheelValue + "\n");   
-
+            Point mousePosition = mouseState.Position;
+            //Define el rectangulo donde el mouse puede moverse sin afectar la camara
+            float minimumYAxisVoid = screenCenter.Y - windowHeight * 20f/100f;
+            float maximumYAxisVoid = screenCenter.Y + windowHeight * 20f/100f;
+            float minimumXAxisVoid = screenCenter.X - windowWidth * 20f/100f;
+            float maximumXAxisVoid = screenCenter.X + windowWidth * 20f/100f;
+            //Definoel rectangulo donde fuera del mismo el mouse movera la camara a maxima velocidad
+            float minMaxSpeedYAxis = screenCenter.Y - windowHeight * 35f/100f;
+            float maxMaxSpeedYAxis = screenCenter.Y + windowHeight * 35f/100f;
+            float minMaxSpeedXAxis = screenCenter.X - windowWidth * 35f/100f;
+            float maxMaxSpeedXAxis = screenCenter.X + windowWidth * 35f/100f;
+            //Regulacion en X
+            if(mousePosition.X > maximumXAxisVoid && mousePosition.X < maxMaxSpeedXAxis) {
+                float speedMultiplierX = (mousePosition.X-maximumXAxisVoid)/(maxMaxSpeedXAxis-maximumXAxisVoid);
+                if(cameraRotation+(0.3f*speedMultiplierX) > 360){
+                    cameraRotation = cameraRotation + (0.3f*speedMultiplierX) - 360f;
+                }
+                else {
+                    cameraRotation += (0.3f*speedMultiplierX);
+                }
+            }
+            else if (mousePosition.X > maxMaxSpeedXAxis) {
+                if(cameraRotation+0.3f > 360){
+                    cameraRotation = cameraRotation + 0.3f - 360f;
+                }
+                else {
+                    cameraRotation += 0.3f;
+                }
+            }
+            else if (mousePosition.X < minimumXAxisVoid && mousePosition.X > minMaxSpeedXAxis ) {
+                float speedMultiplierX = (mousePosition.X-minimumXAxisVoid)/(minMaxSpeedXAxis-minimumXAxisVoid);
+                if(cameraRotation-(0.3f*speedMultiplierX) < 0) {
+                    cameraRotation = cameraRotation - (0.3f*speedMultiplierX) + 360f;
+                }
+                else {
+                    cameraRotation -= (0.3f*speedMultiplierX);
+                }  
+            }
+            else if(mousePosition.X < minMaxSpeedXAxis ) { 
+                if(cameraRotation-0.3f < 0) {
+                    cameraRotation = cameraRotation - 0.3f + 360f;
+                }
+                else {
+                    cameraRotation -= 0.3f;
+                } 
+            }
+            // Regulacion en Y
+            if(mousePosition.Y > maximumYAxisVoid && mousePosition.Y < maxMaxSpeedYAxis) {
+                float speedMultiplierY = (mousePosition.Y-maximumYAxisVoid)/(maxMaxSpeedYAxis-maximumYAxisVoid);
+                if(currentYangle <= maximumYAngle){
+                    if(currentYangle+(0.3f*speedMultiplierY) <= maximumYAngle) {
+                        currentYangle += (0.3f*speedMultiplierY);
+                    }
+                    else {
+                        currentYangle = maximumYAngle;
+                    }
+                }
+            }
+            else if (mousePosition.Y > maxMaxSpeedYAxis) {
+                if(currentYangle <= maximumYAngle){
+                    if(currentYangle+0.3f <= maximumYAngle) {
+                        currentYangle += 0.3f;
+                    }
+                    else {
+                        currentYangle = maximumYAngle;
+                    }
+                }
+            }
+            else if (mousePosition.Y < minimumYAxisVoid && mousePosition.Y > minMaxSpeedYAxis ) {
+                float speedMultiplierY = (mousePosition.Y-minimumYAxisVoid)/(minMaxSpeedYAxis-minimumYAxisVoid);
+                if(currentYangle >= minimumYAngle){
+                    if(currentYangle-(0.3f*speedMultiplierY) >= minimumYAngle) {
+                        currentYangle -= (0.3f*speedMultiplierY);
+                    }
+                    else {
+                        currentYangle = minimumYAngle;
+                    }
+                }          
+            }
+            else if(mousePosition.Y < minMaxSpeedYAxis ) {
+                if(currentYangle >= minimumYAngle){
+                    if(currentYangle-0.3f >= minimumYAngle) {
+                        currentYangle -= 0.3f;
+                    }
+                    else {
+                        currentYangle = minimumYAngle;
+                    }
+                }
+            }
         }
         
 
