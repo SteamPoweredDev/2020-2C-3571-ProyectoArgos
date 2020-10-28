@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.Intrinsics.X86;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,6 +60,7 @@ namespace TGC.MonoGame.TP.Objects
             currentGear = 0;
             HandBrake = false;
             pressedReverse = false;
+            _game = game;
         }
 
 
@@ -67,6 +69,7 @@ namespace TGC.MonoGame.TP.Objects
             if (CanBeControlled)
             {
                 ProcessKeyboard(elsapseGameTime);
+                UpdateMovementSpeed(elsapseGameTime);
                 Move(elsapseGameTime, timeMultiplier);
                 if (_timeToCooldown >= float.Epsilon)
                 {
@@ -86,7 +89,7 @@ namespace TGC.MonoGame.TP.Objects
             if (velocidad == 0) extraSpeed = 0; //Asi no se lo lleva el agua cuando esta parado
             var speed = velocidad + extraSpeed*-Vector3.Dot(orientacionSobreOla, Vector3.Up);
 */
-            var newPosition = new Vector3(Position.X - speed*orientacion.X ,Position.Y,Position.Z + speed*orientacion.Z);
+           // var newPosition = new Vector3(Position.X - speed*orientacion.X ,Position.Y,Position.Z + speed*orientacion.Z);
 
             Position = newPosition;
         }

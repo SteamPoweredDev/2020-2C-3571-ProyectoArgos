@@ -24,7 +24,7 @@ namespace TGC.MonoGame.TP.GUI
         public void Draw()
         {
             var textScale = 10;
-            var textSpeed = "Current Speed: " + _game.PlayerShip.velocidad;
+            var textSpeed = "Current Speed: " + _game.PlayerShip.speed;
             var textLife = $"Health: {_game.PlayerShip.CurrentLife} / {_game.PlayerShip.MaxLife}";
             
             var viewportWidth = _game.GraphicsDevice.Viewport.Width;

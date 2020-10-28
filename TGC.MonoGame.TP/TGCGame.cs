@@ -104,7 +104,7 @@ namespace TGC.MonoGame.TP
             boatPosition = new Vector3(-150, 40, -600);
 
             TargetCamera = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(boatPosition.X, boatPosition.Y + 150, boatPosition.Z - 250), boatPosition, screenCenter, (float)(GraphicsDevice.Viewport.Height), (float)(GraphicsDevice.Viewport.Width));
-            WaterMatrix = Matrix.Identity;
+          //  WaterMatrix = Matrix.Identity;
 
             /*
             Matrix world = Matrix.Identity;
@@ -138,7 +138,7 @@ namespace TGC.MonoGame.TP
             modelEffect.DiffuseColor = Color.DarkBlue.ToVector3();
             modelEffect.EnableDefaultLighting();
 
-
+            _bullets = new List<Bullet>();
             PlayerShip = new Ship(boatPosition,PlayerBoat,new Vector3(0,0,-1), 5, this);
             PlayerShip.CanBeControlled = true;
             EnemyShip = new Ship(new Vector3(-600, 20, 100), EnemyBoat, Vector3.Forward, 5, this);
@@ -160,8 +160,6 @@ namespace TGC.MonoGame.TP
             var skyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "/skyboxes/skybox/skybox");
             var skyBoxEffect = Content.Load<Effect>(ContentFolderEffect + "SkyBox");
             SkyBox = new SkyBox2(skyBox, skyBoxTexture, skyBoxEffect);
-            
-            _bullets = new List<Bullet>();
 
             base.LoadContent();
         }
