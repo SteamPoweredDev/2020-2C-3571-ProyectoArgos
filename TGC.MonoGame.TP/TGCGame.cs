@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -77,6 +78,9 @@ namespace TGC.MonoGame.TP
 
         private List<Bullet> _bullets;
 
+        private List<Bullet> _bulletsToDelete;
+
+        public List<Bullet> BulletsToDelete => _bulletsToDelete; 
         public List<Bullet> Bullets => _bullets;
 
         public Camera CurrentCamera => TargetCamera;
@@ -139,6 +143,7 @@ namespace TGC.MonoGame.TP
             modelEffect.EnableDefaultLighting();
 
             _bullets = new List<Bullet>();
+            _bulletsToDelete = new List<Bullet>();
             PlayerShip = new Ship(boatPosition,PlayerBoat,new Vector3(0,0,-1), 5, this);
             PlayerShip.CanBeControlled = true;
             EnemyShip = new Ship(new Vector3(-600, 20, 100), EnemyBoat, Vector3.Forward, 5, this);
@@ -181,6 +186,14 @@ namespace TGC.MonoGame.TP
             
             WaterMatrixForPlayer = PlayerShip.UpdateShipRegardingWaves(time);
             WaterMatrixForEnemy = EnemyShip.UpdateShipRegardingWaves(time);
+
+            foreach (var bullet in _bullets)
+            {
+                bullet.Update();
+            }
+
+            _bullets = _bullets.Except(_bulletsToDelete).ToList();
+            _bulletsToDelete.Clear();
             
             // Capturar Input teclado
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))

@@ -83,13 +83,12 @@ namespace TGC.MonoGame.TP.Objects
             var newOrientacion = new Vector3((float)Math.Sin(anguloDeGiro), 0, (float)Math.Cos(anguloDeGiro));
             orientacion = newOrientacion;
 
-            var newPosition = new Vector3(Position.X - speed*orientacion.X,Position.Y,Position.Z + speed*orientacion.Z );
-/*
+            //TODO improve wave speed modification
             var extraSpeed = 10;
-            if (velocidad == 0) extraSpeed = 0; //Asi no se lo lleva el agua cuando esta parado
-            var speed = velocidad + extraSpeed*-Vector3.Dot(orientacionSobreOla, Vector3.Up);
-*/
-           // var newPosition = new Vector3(Position.X - speed*orientacion.X ,Position.Y,Position.Z + speed*orientacion.Z);
+            if (speed <= float.Epsilon) extraSpeed = 0; //Asi no se lo lleva el agua cuando esta parado
+            var speedMod = speed + extraSpeed*-Vector3.Dot(orientacionSobreOla, Vector3.Up);
+            
+            var newPosition = new Vector3(Position.X - speed*orientacion.X,Position.Y,Position.Z + speed*orientacion.Z );
 
             Position = newPosition;
         }

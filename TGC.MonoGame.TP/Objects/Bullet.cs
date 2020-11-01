@@ -12,6 +12,7 @@ namespace TGC.MonoGame.TP.Objects
         private float _timeElapsed;
         private Vector3 _originDirection;
         private Vector3 _originPosition;
+        private float _lifeTime = 10;
 
         private TGCGame _game;
         private Camera _camera;
@@ -23,12 +24,20 @@ namespace TGC.MonoGame.TP.Objects
             _originPosition = origin;
             _originDirection = direction;
             _timeElapsed = 0;
-            //Console.WriteLine(_originDirection);
         }
+
+        public void Update()
+        {
+            if (_timeElapsed > _lifeTime)
+            {
+                _game.BulletsToDelete.Add(this);
+            }
+        }
+
         public void Draw(GameTime gameTime)
         {
-            _game.BulletModel.Draw(_game.World * Matrix.CreateTranslation(_originPosition + _originDirection * _timeElapsed), _camera.View, _camera.Projection);
-            _timeElapsed += Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) * _bulletSpeed;
+            _game.BulletModel.Draw(_game.World * Matrix.CreateTranslation(_originPosition + _originDirection * _timeElapsed * _bulletSpeed), _camera.View, _camera.Projection);
+            _timeElapsed += Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
         }
         
     }
