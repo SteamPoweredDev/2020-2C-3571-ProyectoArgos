@@ -46,11 +46,14 @@ namespace TGC.MonoGame.TP.Objects
 
         private TGCGame _game;
 
-        public Ship (Vector3 initialPosition, Model baseModel, Vector3 currentOrientation, float MaxSpeed, TGCGame game)
+        public string ModelName;
+
+        private Matrix waterMatrix;
+
+        public Ship (Vector3 initialPosition, Vector3 currentOrientation, float MaxSpeed, TGCGame game)
         {
             speed = 0;
             Position = initialPosition;
-            modelo = baseModel;
             orientacion = currentOrientation;
             maxspeed = MaxSpeed;
             maxacceleration = 0.005f;
@@ -63,14 +66,63 @@ namespace TGC.MonoGame.TP.Objects
             _game = game;
         }
 
-
-        public void Update(float elsapseGameTime, float timeMultiplier, GameTime gameTime) 
+        public void LoadContent()
         {
+            modelo = _game.Content.Load<Model>(TGCGame.ContentFolder3D + ModelName);
+
+            var basicShader = _game.Content.Load<Effect>(TGCGame.ContentFolderEffect + "EffectPhingPhong");
+            
+            basicShader.Parameters["KAmbient"]?.SetValue(0.15f);
+            basicShader.Parameters["KDiffuse"]?.SetValue(0.75f);
+            basicShader.Parameters["KSpecular"]?.SetValue(1f);
+            basicShader.Parameters["Shininess"]?.SetValue(20f);
+            
+            basicShader.Parameters["AmbientColor"]?.SetValue(new Vector3(1f, 0.98f, 0.98f));
+            basicShader.Parameters["SpecularColor"]?.SetValue(new Vector3(1f, 1f, 1f));
+            
+            var _textureIndex = 0;
+            for (int i = 0; i < modelo.Meshes.Count; i++)
+            {
+                var mesh = modelo.Meshes[i];
+                for (int j = 0; j < mesh.MeshParts.Count; j++)
+                {
+                    var part = mesh.MeshParts[j];
+                    var partShader = basicShader.Clone();
+                    partShader.Parameters["Texture"].SetValue(part.Effect.Parameters["Texture"]?.GetValueTexture2D());
+                    part.Effect = partShader;
+                }
+            }
+        }
+
+        public void Draw()
+        {
+            var playerBoatWorld =  _game.World * waterMatrix * Matrix.CreateTranslation(Position);
+            for (int i = 0; i < modelo.Meshes.Count; i++)
+            {
+                var mesh = modelo.Meshes[i];
+                for (int j = 0; j < mesh.MeshParts.Count; j++)
+                {
+                    var part = mesh.MeshParts[j];
+                    var effect = part.Effect;
+                    effect.Parameters["World"].SetValue(playerBoatWorld);
+                    effect.Parameters["View"].SetValue(_game.CurrentCamera.View);
+                    effect.Parameters["Projection"].SetValue(_game.CurrentCamera.Projection);
+                    effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(playerBoatWorld)));
+                    effect.Parameters["CameraPosition"]?.SetValue(_game.CurrentCamera.Position);
+                }
+                mesh.Draw();
+            }
+        }
+
+
+        public void Update(GameTime gameTime)
+        {
+            UpdateShipRegardingWaves(_game.ElapsedTime);
             if (CanBeControlled)
             {
-                ProcessKeyboard(elsapseGameTime);
-                UpdateMovementSpeed(elsapseGameTime);
-                Move(elsapseGameTime, timeMultiplier);
+                ProcessKeyboard(_game.ElapsedTime);
+                UpdateMovementSpeed(_game.ElapsedTime);
+                Move();
                 if (_timeToCooldown >= float.Epsilon)
                 {
                     _timeToCooldown -= Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);   
@@ -78,7 +130,7 @@ namespace TGC.MonoGame.TP.Objects
             }
         }
       
-        public void Move(float gameTime, float timeMultiplier)
+        public void Move()
         {
             var newOrientacion = new Vector3((float)Math.Sin(anguloDeGiro), 0, (float)Math.Cos(anguloDeGiro));
             orientacion = newOrientacion;
@@ -93,8 +145,8 @@ namespace TGC.MonoGame.TP.Objects
             Position = newPosition;
         }
 
-        public Matrix UpdateShipRegardingWaves (float time) {
-            
+        public void UpdateShipRegardingWaves (float time) 
+        {
             float waveFrequency = 0.01f;
             float waveAmplitude = 20;
             time *= 2;
@@ -110,7 +162,7 @@ namespace TGC.MonoGame.TP.Objects
                 (MathF.Cos(worldVector.Z*waveFrequency+time)*waveFrequency*waveAmplitude) * 0.5f
                 ,1));
             
-            worldVector = new Vector3(worldVector.X, newY, worldVector.Z);
+            worldVector = new Vector3(worldVector.X, newY + 10, worldVector.Z);
             
             Position = worldVector;
             
@@ -119,7 +171,7 @@ namespace TGC.MonoGame.TP.Objects
             //Proyectamos la orientacion sobre el plano formado con la normal del agua para subir o bajar la proa del barco
             orientacionSobreOla = orientacion -  Vector3.Dot(orientacion, waterNormal) * waterNormal;
 
-            return Matrix.CreateLookAt(Vector3.Zero,orientacionSobreOla, waterNormal);
+            waterMatrix = Matrix.CreateLookAt(Vector3.Zero,orientacionSobreOla, waterNormal);
         }
         
         private void UpdateMovementSpeed(float gameTime) 
@@ -179,11 +231,13 @@ namespace TGC.MonoGame.TP.Objects
             if (this.pressedAccelerator == false && keyboardState.IsKeyDown(Keys.W) && currentGear < 3)
             {
                 currentGear++;
+                Console.WriteLine("b");
                 pressedAccelerator = true;
                 if(HandBrake) HandBrake = false;
             }
             if(this.pressedAccelerator == true && keyboardState.IsKeyUp(Keys.W))
             {
+                Console.WriteLine("a");
                 pressedAccelerator = false;
             }
 

@@ -25,10 +25,10 @@ struct VertexShaderOutput
     float2 TextureCoordinate : TEXCOORD1;
 };
 
-texture ModelTexture;
+texture Texture;
 sampler2D textureSampler = sampler_state
 {
-    Texture = (ModelTexture);
+    Texture = (Texture);
     MagFilter = Linear;
     MinFilter = Linear;
     AddressU = Clamp;

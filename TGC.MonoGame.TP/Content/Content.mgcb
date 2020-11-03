@@ -13,11 +13,11 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Effects/BasicShader.fx
+#begin Effects/EffectPhingPhong.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/BasicShader.fx
+/build:Effects/EffectPhingPhong.fx
 
 #begin Effects/SkyBox.fx
 /importer:EffectImporter
@@ -90,7 +90,7 @@
 /processorParam:RotationX=0
 /processorParam:RotationY=0
 /processorParam:RotationZ=0
-/processorParam:Scale=0.1
+/processorParam:Scale=0.2
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
 /build:Models/nagato/Nagato.fbx

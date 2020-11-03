@@ -25,7 +25,7 @@ namespace TGC.MonoGame.TP
         public const string ContentFolderSpriteFonts = "SpriteFonts/";
         public const string ContentFolderTextures = "Textures/";
         
-        private float time;
+        public float ElapsedTime;
         private Vector3 boatPosition;
         private Matrix WaterMatrixForPlayer;
         private Matrix WaterMatrixForEnemy;
@@ -49,10 +49,8 @@ namespace TGC.MonoGame.TP
 
         private GraphicsDeviceManager Graphics { get; }
         private SpriteBatch SpriteBatch { get; set; }
-        private Model PlayerBoat { get; set; }
-        private Model EnemyBoat { get; set; }
-        private Model Island { get; set; }
-        private Model Model4 { get; set; }
+        private Model IslandModel { get; set; }
+        private Model WaterModel { get; set; }
 
         private Model _bulletModel;
 
@@ -60,29 +58,23 @@ namespace TGC.MonoGame.TP
 
         public Ship PlayerShip { get; set; }
         public Ship EnemyShip { get; set; }
-        private Camera Camera;
+        private Camera FreeCamera;
 
         private TargetCamera TargetCamera;
-
         private Effect WaterEffect { get; set; }
-        private float Rotation { get; set; }
-        
+
         private Matrix _world;
         public Matrix World => _world;
 
-        private Matrix view { get; set; }
         private SkyBox2 SkyBox { get; set; }
-        public Matrix MatrixSkybox { get; set; }
 
         private GameUI _gameUi;
 
         private List<Bullet> _bullets;
 
         private List<Bullet> _bulletsToDelete;
-
         public List<Bullet> BulletsToDelete => _bulletsToDelete; 
         public List<Bullet> Bullets => _bullets;
-
         public Camera CurrentCamera => TargetCamera;
 
         /// <summary>
@@ -99,23 +91,14 @@ namespace TGC.MonoGame.TP
             
             // Configuramos nuestras matrices de la escena.
             _world = Matrix.CreateRotationY(MathHelper.Pi);
-           // View = Matrix.CreateLookAt(Vector3.UnitZ * 500 + Vector3.Up * 150, Vector3.Zero, Vector3.Up);
-           // Projection =
-                Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1000);
 
             var screenCenter = new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
-            Camera = new FreeCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(-350, 50, 400), screenCenter);
+            
+            FreeCamera = new FreeCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(-350, 50, 400), screenCenter);
             boatPosition = new Vector3(-150, 40, -600);
 
             TargetCamera = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(boatPosition.X, boatPosition.Y + 150, boatPosition.Z - 250), boatPosition, screenCenter, (float)(GraphicsDevice.Viewport.Height), (float)(GraphicsDevice.Viewport.Width));
-          //  WaterMatrix = Matrix.Identity;
 
-            /*
-            Matrix world = Matrix.Identity;
-            Matrix view = Matrix.CreateLookAt(new Vector3(20, 0, 0), new Vector3(0, 0, 0), Vector3.UnitY);
-            Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 600f, 0.1f, 100f);
-            Vector3 cameraPosition;
-            */
             _gameUi = new GameUI(this);
             base.Initialize();
         }
@@ -127,26 +110,23 @@ namespace TGC.MonoGame.TP
         /// </summary>
         protected override void LoadContent()
         {
-            // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
             SpriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Cargo el modelo del logo.
-            PlayerBoat = Content.Load<Model>(ContentFolder3D + "t-22/T-22");
-           //Model = Content.Load<Model>(ContentFolder3D + "axis");
-            EnemyBoat = Content.Load<Model>(ContentFolder3D + "nagato/Nagato");
-            Island = Content.Load<Model>(ContentFolder3D + "Isla_V2");
-            Model4 = Content.Load<Model>(ContentFolder3D + "water");
+            IslandModel = Content.Load<Model>(ContentFolder3D + "Isla_V2");
+            WaterModel = Content.Load<Model>(ContentFolder3D + "water");
             _bulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
-            // Obtengo su efecto para cambiarle el color y activar la luz predeterminada que tiene MonoGame.
-            var modelEffect = (BasicEffect) PlayerBoat.Meshes[0].Effects[0];
-            modelEffect.DiffuseColor = Color.DarkBlue.ToVector3();
-            modelEffect.EnableDefaultLighting();
 
             _bullets = new List<Bullet>();
             _bulletsToDelete = new List<Bullet>();
-            PlayerShip = new Ship(boatPosition,PlayerBoat,new Vector3(0,0,-1), 5, this);
+            
+            PlayerShip = new Ship(boatPosition,new Vector3(0,0,-1), 5, this);
             PlayerShip.CanBeControlled = true;
-            EnemyShip = new Ship(new Vector3(-600, 20, 100), EnemyBoat, Vector3.Forward, 5, this);
+            PlayerShip.ModelName = "t-22/T-22";
+            PlayerShip.LoadContent();
+            
+            EnemyShip = new Ship(new Vector3(-600, 20, 100), Vector3.Forward, 5, this);
+            EnemyShip.ModelName = "nagato/Nagato";
+            EnemyShip.LoadContent();
 
             WaterEffect = Content.Load<Effect>(ContentFolderEffect + "WaterShader");
             
@@ -160,8 +140,6 @@ namespace TGC.MonoGame.TP
             WaterEffect.Parameters["SpecularColor"]?.SetValue(new Vector3(1f, 1f, 1f));
 
             var skyBox = Content.Load<Model>(ContentFolder3D + "skybox/cube");
-            //var skyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "/skyboxes/sunset/sunset");
-            //var skyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "/skyboxes/sun-in-space/sun-in-space");
             var skyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "/skyboxes/skybox/skybox");
             var skyBoxEffect = Content.Load<Effect>(ContentFolderEffect + "SkyBox");
             SkyBox = new SkyBox2(skyBox, skyBoxTexture, skyBoxEffect);
@@ -176,16 +154,13 @@ namespace TGC.MonoGame.TP
         /// </summary>
         protected override void Update(GameTime gameTime)
         {
-            time += Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) * timeMultiplier;
-            // Aca deberiamos poner toda la logica de actualizacion del juego.
-            PlayerShip.Update(time, timeMultiplier, gameTime);
-            EnemyShip.Update(time, timeMultiplier, gameTime);
+            ElapsedTime += Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) * timeMultiplier;
+
+            PlayerShip.Update(gameTime);
+            EnemyShip.Update(gameTime);
             
             TargetCamera.Update(gameTime);
             TargetCamera.UpdatePosition(gameTime, PlayerShip.Position);
-            
-            WaterMatrixForPlayer = PlayerShip.UpdateShipRegardingWaves(time);
-            WaterMatrixForEnemy = EnemyShip.UpdateShipRegardingWaves(time);
 
             foreach (var bullet in _bullets)
             {
@@ -208,49 +183,37 @@ namespace TGC.MonoGame.TP
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            // Aca deberiamos poner toda la logia de renderizado del juego.
             GraphicsDevice.Clear(Color.Black);
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             GraphicsDevice.BlendState = BlendState.Opaque;
-            //GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-            
-            
-            //Finalmente invocamos al draw del modelo.
-            //Model.Draw(World * Matrix.CreateRotationY(Rotation), View, Projection);
-            PlayerBoat.Draw(_world * WaterMatrixForPlayer * Matrix.CreateTranslation(PlayerShip.Position), TargetCamera.View, TargetCamera.Projection);
+
             for (int i = 0; i < _bullets.Count; i++)
             {
                 _bullets[i].Draw(gameTime);
             }
-            //Model.Draw(World * WaterMatrix, Camera.View, Camera.Projection);
-            EnemyBoat.Draw(World * WaterMatrixForEnemy * Matrix.CreateTranslation(EnemyShip.Position), TargetCamera.View, TargetCamera.Projection);
-            Island.Draw(World * Matrix.CreateTranslation(0, 70, 0), TargetCamera.View, TargetCamera.Projection);
-            var waterMesh = Model4.Meshes[0];
+            
+            PlayerShip.Draw();
+            EnemyShip.Draw();
+            IslandModel.Draw(World * Matrix.CreateTranslation(0, 70, 0), TargetCamera.View, TargetCamera.Projection);
+            var waterMesh = WaterModel.Meshes[0];
             
             if (waterMesh != null)
-           {
+            {
                    var part = waterMesh.MeshParts[0];
                    part.Effect = WaterEffect;
                    WaterEffect.Parameters["World"].SetValue(_world);
                    WaterEffect.Parameters["View"].SetValue(TargetCamera.View);
                    WaterEffect.Parameters["Projection"].SetValue(TargetCamera.Projection);
                    WaterEffect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(_world)));
-                   WaterEffect.Parameters["Time"]?.SetValue(time);
+                   WaterEffect.Parameters["Time"]?.SetValue(ElapsedTime);
                    WaterEffect.Parameters["CameraPosition"]?.SetValue(TargetCamera.Position);
-                   //Effect.Parameters["WorldViewProjection"].SetValue(Camera.WorldMatrix * Camera.View * Camera.Projection);
-                   //Effect.Parameters["ModelTexture"].SetValue(Texture);
-                 //  Effect.Parameters["Time"]?.SetValue(time);
                    waterMesh.Draw();
-           }
-
+            }
+ 
             var originalRasterizerState = GraphicsDevice.RasterizerState;
             var rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.None;
             Graphics.GraphicsDevice.RasterizerState = rasterizerState;
-
-            //MatrixSkybox = Matrix.CreateOrthographic(100, 100, 0.1f, 100f);
-
-            //SkyBox.Draw(Camera.View, MatrixSkybox, Camera.Position);
             
             SkyBox.Draw(TargetCamera.View, TargetCamera.Projection, TargetCamera.Position);
 

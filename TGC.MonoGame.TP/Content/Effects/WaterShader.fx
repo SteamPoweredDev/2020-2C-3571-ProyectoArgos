@@ -92,7 +92,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     
    // float4 finalColor = float4(diffuseLight + ambientLight, 1);
     float4 finalColor = float4(saturate(ambientLight + diffuseLight) + specularLight, 0);
-
+    
 	return finalColor;
 }
 
