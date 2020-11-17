@@ -74,14 +74,14 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     float3 ambientLight = KAmbient * AmbientColor;
     
     float NdotL = saturate(dot(input.Normal.xyz, lightDirection));
-    float3 diffuseLight = KDiffuse * tex2D(textureSampler, input.TextureCoordinate).rgb * NdotL;
+    float3 diffuseLight = KDiffuse * float3(1,1,1) * NdotL;
 
     float NdotH = dot(input.Normal.xyz, halfVector);
     float3 specularLight = sign(NdotL) * KSpecular * SpecularColor * pow(saturate(NdotH), Shininess);
 
 	//return tex2D(textureSampler, input.TextureCoordinate);
 	//return input.Color;
-	float4 finalColor = float4(saturate(ambientLight + diffuseLight) + specularLight, 0);
+	float4 finalColor = float4(saturate(ambientLight + diffuseLight) * tex2D(textureSampler, input.TextureCoordinate).rgb + specularLight, 0);
     return finalColor;
 }
 
