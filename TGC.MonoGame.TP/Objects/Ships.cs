@@ -49,6 +49,8 @@ namespace TGC.MonoGame.TP.Objects
         public string ModelName;
 
         private Matrix waterMatrix;
+        
+        private Matrix[] boneTransforms;
 
         public Ship (Vector3 initialPosition, Vector3 currentOrientation, float MaxSpeed, TGCGame game)
         {
@@ -92,6 +94,8 @@ namespace TGC.MonoGame.TP.Objects
                     part.Effect = partShader;
                 }
             }
+            boneTransforms = new Matrix[modelo.Bones.Count];
+            modelo.CopyAbsoluteBoneTransformsTo(boneTransforms);
         }
 
         public void Draw()
@@ -104,7 +108,7 @@ namespace TGC.MonoGame.TP.Objects
                 {
                     var part = mesh.MeshParts[j];
                     var effect = part.Effect;
-                    effect.Parameters["World"].SetValue(playerBoatWorld);
+                    effect.Parameters["World"].SetValue(boneTransforms[mesh.ParentBone.Index] * playerBoatWorld);
                     effect.Parameters["View"].SetValue(_game.CurrentCamera.View);
                     effect.Parameters["Projection"].SetValue(_game.CurrentCamera.Projection);
                     effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(playerBoatWorld)));
