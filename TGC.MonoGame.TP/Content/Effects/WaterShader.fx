@@ -51,7 +51,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
         
     float waveFrequency = 0.01;
     float waveAmplitude = 20;
-     float waveAmplitude2 = 20;
+    float waveAmplitude2 = 20;
 
 	worldPosition.y = zero.y + (sin(worldPosition.x*waveFrequency+ shaderTime) + sin(worldPosition.z*waveFrequency+ shaderTime))*waveAmplitude;
     
@@ -64,7 +64,6 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     
 	input.Normal.xyz = normalize(cross(tangent2, tangent1));
 
-//	float4 worldPosition = mul(input.Position, World);
 	float4 viewPosition = mul(worldPosition, View);
 
     output.Normal = mul(input.Normal, InverseTransposeWorld);
@@ -90,9 +89,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     float NdotH = dot(input.Normal.xyz, halfVector);
     float3 specularLight = sign(NdotL) * KSpecular * SpecularColor * pow(saturate(NdotH), Shininess);
     
-   // float4 finalColor = float4(diffuseLight + ambientLight, 1);
     float4 finalColor = float4(saturate(ambientLight + diffuseLight) + specularLight, 0);
-    
 	return finalColor;
 }
 
